@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -67,3 +68,16 @@ class SquareWorld:
         sd_arr_list = [obs.signed_distance(points) for obs in self.obstacle_list]
         sd_vals_union = np.min(np.array(sd_arr_list), axis=0)
         return sd_vals_union
+
+    def visualize(self, n_grid: int = 100) -> Tuple:
+        xlin = np.linspace(self.b_min[0], self.b_max[0], n_grid)
+        ylin = np.linspace(self.b_min[1], self.b_max[1], n_grid)
+        meshes = np.meshgrid(xlin, ylin)
+        meshes_flatten = [mesh.flatten() for mesh in meshes]
+        pts = np.array([p for p in zip(*meshes_flatten)])
+        sd_mesh = self.signed_distance(pts).reshape((n_grid, n_grid))
+
+        fig, ax = plt.subplots()
+        ax.contourf(xlin, ylin, sd_mesh, cmap="summer")
+        ax.contour(xlin, ylin, sd_mesh, cmap="gray", levels=[0.0])
+        return fig, ax
