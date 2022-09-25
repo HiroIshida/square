@@ -1,8 +1,10 @@
 from dataclasses import dataclass
-from typing import List, Optional, Protocol
+from typing import Optional, Protocol
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+from square.trajectory import Trajectory
 
 
 class MazeLike(Protocol):
@@ -85,13 +87,19 @@ class RRT:
                 return True
         return False
 
-    def get_solution(self) -> List[np.ndarray]:
+    def get_solution(self) -> Trajectory:
         idx = self.sample_count - 1
-        trajectory = [self.goal, self.samples[idx]]
+        points = [self.goal, self.samples[idx]]
         while idx != 0:
             idx = self.parent_indices[idx]
-            trajectory.append(self.samples[idx])
-        return trajectory
+            points.append(self.samples[idx])
+        points.reverse()
+        return Trajectory(points)
+
+    def solve(self) -> Trajectory:
+        while not self.extend():
+            pass
+        return self.get_solution()
 
     def visualize(self):
         fig, ax = plt.subplots()
