@@ -45,20 +45,24 @@ class PlannerConfig:
 
 @dataclass
 class OptimizationBasedPlanner:
-    sdf: SDFLike
     start: np.ndarray
     goal: np.ndarray
-    smooth_mat: np.ndarray
+    sdf: SDFLike
+    smooth_mat: Optional[np.ndarray] = None
     config: PlannerConfig = PlannerConfig()
 
+    def __post_init__(self):
+        self.smooth_mat = construct_smoothcost_fullmat(self.config.n_waypoint, 2)
+
     def fun_objective(self, x: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        assert self.smooth_mat is not None
         f = (0.5 * self.smooth_mat.dot(x).dot(x)).item() / self.config.n_waypoint
         grad = self.smooth_mat.dot(x) / self.config.n_waypoint
         return f, grad
 
     def fun_eq(self, x: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         n_dof = 2
-        value = np.hstack([x[:n_dof] - self.start, x[-n_dof:] - self.goal])
+        value = np.hstack([self.start - x[:n_dof], self.goal - x[-n_dof:]])
         grad = np.zeros((n_dof * 2, self.config.n_waypoint * n_dof))
         grad[:n_dof, :n_dof] = -np.eye(n_dof)
         grad[-n_dof:, -n_dof:] = -np.eye(n_dof)
