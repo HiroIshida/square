@@ -1,16 +1,25 @@
 import numpy as np
 
-from square.rrt import RRT
-from square.world import CircleObstacle, SquareWorld
+from square.optimizer import OptimizationBasedPlanner, linear_interped_trajectory
+from square.world import CircleObstacle
 
 if __name__ == "__main__":
-    obstacles = (CircleObstacle(np.array([0.5, 0.5]), 0.4),)
-    world = SquareWorld(obstacles)
-    rrt = RRT(np.array([0.1, 0.1]), np.array([0.9, 0.9]), world)
+    start = np.ones(2) * 0.05
+    goal = np.ones(2) * 0.95
+    sdf = CircleObstacle(np.array([0.5, 0.6]), 0.4)
+    b_min = np.zeros(2)
+    b_max = np.ones(2)
+    planner = OptimizationBasedPlanner(start, goal, sdf, b_min, b_max)
 
-    while not rrt.extend():
+    traj_init = linear_interped_trajectory(start, goal, 20)
+    res = planner.solve(traj_init)
+    assert res.optim_result.success
+    for p in res.traj_solution:
+        # assert not sdf.is_colliding(p)
         pass
-    rrt.visualize()
+
     import matplotlib.pyplot as plt
 
+    arr = np.array(res.traj_solution)
+    plt.plot(arr[:, 0], arr[:, 1], "ro-")
     plt.show()

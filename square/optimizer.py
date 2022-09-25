@@ -22,7 +22,8 @@ class SDFLike(Protocol):
 @dataclass(frozen=True)
 class PlannerConfig:
     n_waypoint: int = 20
-    ftol: float = 1e-4
+    clearance: float = 0.02
+    ftol: float = 1e-7
     disp: bool = True
     maxiter: int = 100
 
@@ -106,13 +107,13 @@ class OptimizationBasedPlanner:
         eps = 1e-7
         P0 = x.reshape((self.config.n_waypoint, n_dof))
 
-        F0 = self.sdf.signed_distance(P0)
+        F0 = self.sdf.signed_distance(P0) - self.config.clearance
         Grad0 = np.zeros((self.config.n_waypoint, n_dof))
 
         for i in range(n_dof):
             P1 = copy.deepcopy(P0)
             P1[:, i] += eps
-            F1 = self.sdf.signed_distance(P1)
+            F1 = self.sdf.signed_distance(P1) - self.config.clearance
             Grad0[:, i] = (F1 - F0) / eps
 
         value = F0
@@ -127,7 +128,10 @@ class OptimizationBasedPlanner:
         f, jac = self.scipinize(self.fun_objective)
 
         if self.b_min is not None and self.b_max is not None:
-            bounds = list(zip(self.b_min, self.b_max)) * self.config.n_waypoint
+            bounds = (
+                list(zip(self.b_min + self.config.clearance, self.b_max - self.config.clearance))
+                * self.config.n_waypoint
+            )
         else:
             bounds = None
 
