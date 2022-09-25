@@ -2,7 +2,7 @@ import copy
 
 import numpy as np
 
-from square.optimizer import OptimizationBasedPlanner
+from square.optimizer import OptimizationBasedPlanner, linear_interped_trajectory
 from square.world import CircleObstacle
 
 
@@ -49,3 +49,20 @@ def test_optimization_planner_functions():
         gradient_test(planner.fun_objective, x)
         jacobian_test(planner.fun_eq, x)
         jacobian_test(planner.fun_ineq, x)
+
+
+def test_linear_interped_trajectory():
+    start = np.zeros(2)
+    goal = np.ones(2)
+    traj = linear_interped_trajectory(start, goal, 5)
+    np.testing.assert_almost_equal(start, traj[0])
+    np.testing.assert_almost_equal(goal, traj[-1])
+
+
+def test_optimization_planner():
+    start = np.zeros(2)
+    goal = np.ones(2)
+    sdf = CircleObstacle(np.array([0.5, 0.5]), 0.3)
+    traj_init = linear_interped_trajectory(start, goal, 20)
+    planner = OptimizationBasedPlanner(start, goal, sdf)
+    planner.solve(traj_init)

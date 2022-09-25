@@ -5,12 +5,6 @@ from typing import Tuple
 import numpy as np
 
 
-@dataclass
-class Grid:
-    Nx: int
-    Ny: int
-
-
 class Obstacle(ABC):
     def is_colliding(self, pos: np.ndarray) -> bool:
         dist = self.signed_distance(np.expand_dims(pos, axis=0))[0]
