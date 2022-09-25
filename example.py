@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from square.optimizer import OptimizationBasedPlanner, linear_interped_trajectory
+from square.optimizer import OptimizationBasedPlanner
+from square.trajectory import Trajectory
 from square.world import CircleObstacle, SquareWorld
 
 if __name__ == "__main__":
@@ -17,12 +18,13 @@ if __name__ == "__main__":
     b_max = np.ones(2)
     planner = OptimizationBasedPlanner(start, goal, world, b_min, b_max)
 
-    traj_init = linear_interped_trajectory(start, goal, 20)
+    traj_init = Trajectory.from_two_points(start, goal, 20)
+
     res = planner.solve(traj_init)
     assert res.optim_result.success
 
     fig, ax = world.visualize()
 
-    arr = np.array(res.traj_solution)
+    arr = res.traj_solution.numpy()
     ax.plot(arr[:, 0], arr[:, 1], "ro-")
     plt.show()

@@ -1,17 +1,12 @@
 import copy
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional, Protocol, Tuple
+from typing import Callable, Dict, Optional, Protocol, Tuple
 
 import numpy as np
 from scipy.linalg import block_diag
 from scipy.optimize import OptimizeResult, minimize
 
-
-def linear_interped_trajectory(
-    start: np.ndarray, goal: np.ndarray, n_waypoint: int
-) -> List[np.ndarray]:
-    diff = goal - start
-    return [start + diff / (n_waypoint - 1) * i for i in range(n_waypoint)]
+from square.trajectory import Trajectory
 
 
 class SDFLike(Protocol):
@@ -30,7 +25,7 @@ class PlannerConfig:
 
 @dataclass(frozen=True)
 class PlanningResult:
-    traj_solution: List[np.ndarray]
+    traj_solution: Trajectory
     optim_result: OptimizeResult
 
 
@@ -120,7 +115,7 @@ class OptimizationBasedPlanner:
         grad = block_diag(*list(Grad0))
         return value, grad
 
-    def solve(self, init_trajectory: List[np.ndarray]) -> PlanningResult:
+    def solve(self, init_trajectory: Trajectory) -> PlanningResult:
         eq_const_scipy, eq_const_jac_scipy = self.scipinize(self.fun_eq)
         eq_dict = {"type": "eq", "fun": eq_const_scipy, "jac": eq_const_jac_scipy}
         ineq_const_scipy, ineq_const_jac_scipy = self.scipinize(self.fun_ineq)
@@ -135,7 +130,7 @@ class OptimizationBasedPlanner:
         else:
             bounds = None
 
-        x_init = np.array(init_trajectory).reshape((-1, 2))
+        x_init = init_trajectory.numpy().reshape((-1, 2))
         assert x_init.shape[0] == self.config.n_waypoint
 
         slsqp_option: Dict = {
@@ -154,5 +149,5 @@ class OptimizationBasedPlanner:
             options=slsqp_option,
         )
 
-        traj_solution = list(res.x.reshape(self.config.n_waypoint, 2))
+        traj_solution = Trajectory(list(res.x.reshape(self.config.n_waypoint, 2)))
         return PlanningResult(traj_solution, res)

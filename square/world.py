@@ -50,9 +50,9 @@ class BoxObstacle(Obstacle):
 class SquareWorld:
     b_min: np.ndarray
     b_max: np.ndarray
-    obstacle_list: Tuple[Obstacle]
+    obstacle_list: Tuple[Obstacle, ...]
 
-    def __init__(self, obstacle_list: Tuple[Obstacle]):
+    def __init__(self, obstacle_list: Tuple[Obstacle, ...]):
         self.b_min = np.zeros(2)
         self.b_max = np.ones(2)
         self.obstacle_list = obstacle_list
