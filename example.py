@@ -2,29 +2,29 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from square.optimizer import OptimizationBasedPlanner
-from square.trajectory import Trajectory
+from square.rrt import RRT
 from square.world import CircleObstacle, SquareWorld
 
 if __name__ == "__main__":
     start = np.ones(2) * 0.05
-    goal = np.ones(2) * 0.95
+    goal = np.array([0.05, 0.95])
     sdf1 = CircleObstacle(np.array([0.5, 0.6]), 0.3)
     sdf2 = CircleObstacle(np.array([0.2, 0.4]), 0.2)
     sdf3 = CircleObstacle(np.array([0.7, 0.4]), 0.2)
 
     world = SquareWorld((sdf1, sdf2, sdf3))
 
-    b_min = np.zeros(2)
-    b_max = np.ones(2)
-    planner = OptimizationBasedPlanner(start, goal, world, b_min, b_max)
+    # creat initial trajectory (solution for optim) by rrt
+    rrt = RRT(start, goal, world)
+    traj_rrt = rrt.solve()
+    traj_init = traj_rrt.resample(20)
 
-    traj_init = Trajectory.from_two_points(start, goal, 20)
-
+    # solve optimization to plan a trajectory
+    planner = OptimizationBasedPlanner(start, goal, world, world.b_min, world.b_max)
     res = planner.solve(traj_init)
     assert res.optim_result.success
 
     fax = world.visualize()
+    traj_init.visualize(fax, "bo-")
     res.traj_solution.visualize(fax, "ro-")
-    traj_resampled = res.traj_solution.resample(6)
-    traj_resampled.visualize(fax, "bo-")
     plt.show()
