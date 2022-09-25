@@ -25,6 +25,8 @@ jobs:
               uses: actions/setup-python@v1
               with:
                 python-version: ${{ matrix.python-version }}
+            - name: install this package
+                pip3 install -e .
 
             - name: pip install pytest and mypy
               run: |
