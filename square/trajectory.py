@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, overload
+from typing import List, Tuple, overload
 
 import numpy as np
 
@@ -10,6 +10,11 @@ class Trajectory:
 
     def numpy(self):
         return np.array(self._points)
+
+    def visualize(self, fax: Tuple) -> None:
+        fig, ax = fax
+        arr = self.numpy()
+        ax.plot(arr[:, 0], arr[:, 1], "ro-")
 
     @classmethod
     def from_two_points(cls, start: np.ndarray, goal: np.ndarray, n_waypoint) -> "Trajectory":

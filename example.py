@@ -23,8 +23,6 @@ if __name__ == "__main__":
     res = planner.solve(traj_init)
     assert res.optim_result.success
 
-    fig, ax = world.visualize()
-
-    arr = res.traj_solution.numpy()
-    ax.plot(arr[:, 0], arr[:, 1], "ro-")
+    fax = world.visualize()
+    res.traj_solution.visualize(fax)
     plt.show()
