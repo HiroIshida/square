@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup_requires = []
 
-install_requires = ["numpy", "matplotlib"]
+install_requires = ["numpy", "matplotlib", "scipy"]
 
 setup(
     name="square",
