@@ -24,5 +24,7 @@ if __name__ == "__main__":
     assert res.optim_result.success
 
     fax = world.visualize()
-    res.traj_solution.visualize(fax)
+    res.traj_solution.visualize(fax, "ro-")
+    traj_resampled = res.traj_solution.resample(6)
+    traj_resampled.visualize(fax, "bo-")
     plt.show()
