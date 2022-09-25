@@ -28,12 +28,12 @@ jobs:
 
             - name: pip install pytest and mypy
               run: |
-                  #pip3 install pytest
+                  pip3 install pytest
                   pip3 install mypy
 
-                  #- name: Run Pytest
-                  #  run: |
-                  #      pytest -v tests
+            - name: Run Pytest
+              run: |
+                  pytest -v tests
 
             - name: Run mypy
               run: mypy .
