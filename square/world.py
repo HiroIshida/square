@@ -4,6 +4,7 @@ from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.interpolate import RegularGridInterpolator
 
 
 class Obstacle(ABC):
@@ -47,6 +48,29 @@ class BoxObstacle(Obstacle):
         return sd_vals
 
 
+@dataclass
+class GridSDF:
+    itp: RegularGridInterpolator
+    b_min: np.ndarray
+    b_max: np.ndarray
+    n_grid: int
+
+    @classmethod
+    def from_mesh(
+        cls, sdf_mesh: np.ndarray, b_min: np.ndarray, b_max: np.ndarray, method="linear"
+    ) -> "GridSDF":
+        nx, ny = sdf_mesh.shape
+        assert nx == ny
+        xlin = np.linspace(b_min[0], b_max[0], nx)
+        ylin = np.linspace(b_min[1], b_max[1], ny)
+        X, Y = np.meshgrid(xlin, ylin)
+        itp = RegularGridInterpolator((xlin, ylin), sdf_mesh.T, method=method)
+        return cls(itp, b_min, b_max, nx)
+
+    def signed_distance(self, points: np.ndarray) -> np.ndarray:
+        return self.itp(points)
+
+
 class SquareWorld:
     b_min: np.ndarray
     b_max: np.ndarray
@@ -69,15 +93,27 @@ class SquareWorld:
         sd_vals_union = np.min(np.array(sd_arr_list), axis=0)
         return sd_vals_union
 
-    def visualize(self, n_grid: int = 100) -> Tuple:
+    def _get_mesh_points(self, n_grid: int) -> np.ndarray:
         xlin = np.linspace(self.b_min[0], self.b_max[0], n_grid)
         ylin = np.linspace(self.b_min[1], self.b_max[1], n_grid)
         meshes = np.meshgrid(xlin, ylin)
         meshes_flatten = [mesh.flatten() for mesh in meshes]
         pts = np.array([p for p in zip(*meshes_flatten)])
-        sd_mesh = self.signed_distance(pts).reshape((n_grid, n_grid))
+        return pts
+
+    def get_grid_sdf(self, n_grid: int, method="linear") -> GridSDF:
+        pts = self._get_mesh_points(n_grid)
+        sdf_mesh = self.signed_distance(pts).reshape((n_grid, n_grid))
+        return GridSDF.from_mesh(sdf_mesh, self.b_min, self.b_max, method=method)
+
+    def visualize(self, n_grid: int = 100) -> Tuple:
+        pts = self._get_mesh_points(n_grid)
+        sdf_mesh = self.signed_distance(pts).reshape((n_grid, n_grid))
+
+        xlin = np.linspace(self.b_min[0], self.b_max[0], n_grid)
+        ylin = np.linspace(self.b_min[1], self.b_max[1], n_grid)
 
         fig, ax = plt.subplots()
-        ax.contourf(xlin, ylin, sd_mesh, cmap="summer")
-        ax.contour(xlin, ylin, sd_mesh, cmap="gray", levels=[0.0])
+        ax.contourf(xlin, ylin, sdf_mesh, cmap="summer")
+        ax.contour(xlin, ylin, sdf_mesh, cmap="gray", levels=[0.0])
         return fig, ax
