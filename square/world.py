@@ -101,9 +101,13 @@ class SquareWorld:
         pts = np.array([p for p in zip(*meshes_flatten)])
         return pts
 
-    def get_grid_sdf(self, n_grid: int, method="linear") -> GridSDF:
+    def get_sdf_mesh(self, n_grid: int) -> np.ndarray:
         pts = self._get_mesh_points(n_grid)
         sdf_mesh = self.signed_distance(pts).reshape((n_grid, n_grid))
+        return sdf_mesh
+
+    def get_grid_sdf(self, n_grid: int, method="linear") -> GridSDF:
+        sdf_mesh = self.get_sdf_mesh(n_grid)
         return GridSDF.from_mesh(sdf_mesh, self.b_min, self.b_max, method=method)
 
     def visualize(self, n_grid: int = 100) -> Tuple:
