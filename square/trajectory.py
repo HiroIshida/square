@@ -20,7 +20,8 @@ class Trajectory:
 
     def sample_point(self, dist_from_start: float) -> np.ndarray:
 
-        assert dist_from_start <= self.length
+        assert dist_from_start <= self.length + 1e-6
+        dist_from_start = min(dist_from_start, self.length)
         edge_dist_sum = 0.0
         for i in range(len(self)):
             edge_dist_sum += float(np.linalg.norm(self._points[i + 1] - self._points[i]))
