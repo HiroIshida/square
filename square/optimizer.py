@@ -1,5 +1,5 @@
 import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import Callable, Dict, Optional, Protocol, Tuple
 
 import numpy as np
@@ -26,7 +26,25 @@ class PlannerConfig:
 @dataclass(frozen=True)
 class PlanningResult:
     traj_solution: Trajectory
-    optim_result: OptimizeResult
+    success: bool
+    status: int
+    message: str
+    fun: np.ndarray
+    jac: np.ndarray
+    nit: int
+
+    @classmethod
+    def from_optimize_result(cls, res: OptimizeResult) -> "PlanningResult":
+        kwargs = {}
+        for field in fields(cls):
+            key = field.name
+            if key == "traj_solution":
+                points = res.x.reshape(-1, 2)
+                value = Trajectory(list(points))
+            else:
+                value = res[key]
+            kwargs[key] = value
+        return cls(**kwargs)  # type: ignore
 
 
 @dataclass
@@ -149,5 +167,4 @@ class OptimizationBasedPlanner:
             options=slsqp_option,
         )
 
-        traj_solution = Trajectory(list(res.x.reshape(self.config.n_waypoint, 2)))
-        return PlanningResult(traj_solution, res)
+        return PlanningResult.from_optimize_result(res)

@@ -61,7 +61,7 @@ def test_optimization_planner():
     planner = OptimizationBasedPlanner(start, goal, sdf, b_min, b_max)
     traj_init = Trajectory.from_two_points(start, goal, 20)
     res = planner.solve(traj_init)
-    assert res.optim_result.success
+    assert res.success
     for p in res.traj_solution:
         assert not sdf.is_colliding(p)
         assert np.all(p > b_min)

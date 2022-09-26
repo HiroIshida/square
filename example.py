@@ -22,7 +22,7 @@ if __name__ == "__main__":
     # solve optimization to plan a trajectory
     planner = OptimizationBasedPlanner(start, goal, world, world.b_min, world.b_max)
     res = planner.solve(traj_init)
-    assert res.optim_result.success
+    assert res.success
 
     fax = world.visualize()
     traj_init.visualize(fax, "bo-")
