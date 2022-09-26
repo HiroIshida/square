@@ -17,6 +17,7 @@ if __name__ == "__main__":
     # creat initial trajectory (solution for optim) by rrt
     rrt = RRT(start, goal, world)
     traj_rrt = rrt.solve()
+    assert traj_rrt is not None
     traj_init = traj_rrt.resample(20)
 
     # solve optimization to plan a trajectory

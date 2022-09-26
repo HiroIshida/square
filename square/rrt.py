@@ -96,10 +96,14 @@ class RRT:
         points.reverse()
         return Trajectory(points)
 
-    def solve(self) -> Trajectory:
-        while not self.extend():
-            pass
-        return self.get_solution()
+    def solve(self) -> Optional[Trajectory]:
+        count = 0
+        while count < self.config.n_max_iter:
+            found_solution = self.extend()
+            if found_solution:
+                return self.get_solution()
+            count += 1
+        return None
 
     def visualize(self):
         fig, ax = plt.subplots()

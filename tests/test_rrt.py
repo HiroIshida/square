@@ -14,6 +14,7 @@ def test_rrt():
     world = SquareWorld((sdf2,))
     rrt = RRT(start, goal, world)
     traj_rrt = rrt.solve()
+    assert traj_rrt is not None
     np.testing.assert_almost_equal(traj_rrt[0], start)
     np.testing.assert_almost_equal(traj_rrt[-1], goal)
 
