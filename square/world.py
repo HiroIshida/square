@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 
+from square.trajectory import Trajectory
+
 
 class Obstacle(ABC):
     def is_colliding(self, pos: np.ndarray) -> bool:
@@ -87,6 +89,13 @@ class SquareWorld:
     def is_colliding(self, state: np.ndarray) -> bool:
         dist = self.signed_distance(np.expand_dims(state, axis=0))[0]
         return dist < 0.0
+
+    def is_valid_trajectory(self, traj: Trajectory, n_points=40) -> bool:
+        traj_resample = traj.resample(n_points)
+        for point in traj_resample.numpy():
+            if self.is_colliding(point):
+                return False
+        return True
 
     def signed_distance(self, points: np.ndarray) -> np.ndarray:
         sd_arr_list = [obs.signed_distance(points) for obs in self.obstacle_list]
