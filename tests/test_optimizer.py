@@ -42,6 +42,9 @@ def test_optimization_planner_functions():
     sdf = CircleObstacle(np.array([0.5, 0.5]), 0.3)
     planner = OptimizationBasedPlanner(start, goal, sdf)
 
+    a, b = planner.fun_eq_regular(np.array([0.0, 0.0, 1.0, 1.0, 3.0, 3.0]))
+    assert a.item() == 6
+
     for _ in range(10):
         n_dim = planner.config.n_waypoint * 2
         x = np.random.rand(n_dim)
@@ -50,6 +53,7 @@ def test_optimization_planner_functions():
         gradient_test(planner.fun_objective, x)
         jacobian_test(planner.fun_eq, x)
         jacobian_test(planner.fun_ineq, x)
+        jacobian_test(planner.fun_eq_regular, x)
 
 
 def test_optimization_planner():

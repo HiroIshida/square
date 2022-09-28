@@ -12,6 +12,7 @@ from square.trajectory import Trajectory
 
 @dataclass(frozen=True)
 class PlannerConfig:
+    n_dof: int = 2
     n_waypoint: int = 20
     clearance: float = 0.02
     ftol: float = 1e-7
@@ -104,12 +105,30 @@ class OptimizationBasedPlanner:
         return f, grad
 
     def fun_eq(self, x: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        n_dof = 2
+        n_dof = self.config.n_dof
         value = np.hstack([self.start - x[:n_dof], self.goal - x[-n_dof:]])
         grad = np.zeros((n_dof * 2, self.config.n_waypoint * n_dof))
         grad[:n_dof, :n_dof] = -np.eye(n_dof)
         grad[-n_dof:, -n_dof:] = -np.eye(n_dof)
         return value, grad
+
+    def fun_eq_regular(self, x: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        n_dof = self.config.n_dof
+        # if regular point constraint
+        points = x.reshape(-1, n_dof)
+        n_point = len(points)
+        dist_squared_vec = np.sum((points[1:] - points[:-1]) ** 2, axis=1)
+        squared_diff_vec = dist_squared_vec[1:] - dist_squared_vec[:-1]
+
+        grad_list = []
+        for i in range(1, n_point - 1):
+            grad_partial = np.zeros(n_point * n_dof)
+            grad_partial[(i - 1) * n_dof : i * n_dof] = -2 * points[i - 1] + 2 * points[i]
+            grad_partial[i * n_dof : (i + 1) * n_dof] = -2 * points[i + 1] + 2 * points[i - 1]
+            grad_partial[(i + 1) * n_dof : (i + 2) * n_dof] = -2 * points[i] + 2 * points[i + 1]
+            grad_list.append(grad_partial)
+        grad = np.stack(grad_list)
+        return squared_diff_vec, grad
 
     def fun_ineq(self, x: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         n_dof = 2
@@ -132,6 +151,7 @@ class OptimizationBasedPlanner:
     def solve(self, init_trajectory: Trajectory) -> PlanningResult:
         eq_const_scipy, eq_const_jac_scipy = self.scipinize(self.fun_eq)
         eq_dict = {"type": "eq", "fun": eq_const_scipy, "jac": eq_const_jac_scipy}
+
         ineq_const_scipy, ineq_const_jac_scipy = self.scipinize(self.fun_ineq)
         ineq_dict = {"type": "ineq", "fun": ineq_const_scipy, "jac": ineq_const_jac_scipy}
         f, jac = self.scipinize(self.fun_objective)

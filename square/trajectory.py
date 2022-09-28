@@ -84,3 +84,6 @@ class Trajectory:
 
     def __iter__(self):
         return self._points.__iter__()
+
+    def append(self, point: np.ndarray) -> None:
+        self._points.append(point)
