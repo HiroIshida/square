@@ -25,11 +25,11 @@ class Trajectory:
     def sample_point(self, dist_from_start: float) -> np.ndarray:
 
         if dist_from_start > self.length + 1e-6:
-            raise InvalidSamplePointError()
+            raise InvalidSamplePointError("exceed total length")
 
         dist_from_start = min(dist_from_start, self.length)
         edge_dist_sum = 0.0
-        for i in range(len(self)):
+        for i in range(len(self) - 1):
             edge_dist_sum += float(np.linalg.norm(self._points[i + 1] - self._points[i]))
             if dist_from_start <= edge_dist_sum:
                 diff = edge_dist_sum - dist_from_start
@@ -37,7 +37,7 @@ class Trajectory:
                 vec_to_prev_unit = vec_to_prev / np.linalg.norm(vec_to_prev)
                 point_new = self._points[i + 1] + vec_to_prev_unit * diff
                 return point_new
-        assert False
+        raise InvalidSamplePointError()
 
     def resample(self, n_waypoint: int) -> "Trajectory":
         # yeah, it's inefficient. n^2 instead of n ...
