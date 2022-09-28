@@ -1,18 +1,11 @@
 from dataclasses import dataclass
-from typing import Optional, Protocol
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+from square.protocols import MazeLike
 from square.trajectory import Trajectory
-
-
-class MazeLike(Protocol):
-    def sample(self) -> np.ndarray:
-        ...
-
-    def is_colliding(self, state: np.ndarray) -> bool:
-        ...
 
 
 @dataclass

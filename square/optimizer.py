@@ -1,17 +1,13 @@
 import copy
 from dataclasses import dataclass, fields
-from typing import Callable, Dict, Optional, Protocol, Tuple
+from typing import Callable, Dict, Optional, Tuple
 
 import numpy as np
 from scipy.linalg import block_diag
 from scipy.optimize import OptimizeResult, minimize
 
+from square.protocols import SDFLike
 from square.trajectory import Trajectory
-
-
-class SDFLike(Protocol):
-    def signed_distance(self, points: np.ndarray) -> np.ndarray:
-        ...
 
 
 @dataclass(frozen=True)
