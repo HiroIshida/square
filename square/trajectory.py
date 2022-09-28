@@ -85,5 +85,12 @@ class Trajectory:
     def __iter__(self):
         return self._points.__iter__()
 
+    def get_connected_trajectory(self, goal: np.ndarray) -> "Trajectory":
+        dists = np.sum((self._points - goal) ** 2, axis=1)
+        idx_min = np.argmin(dists).item()
+        points_new = self._points[: idx_min + 1] + [goal]
+        traj_new = Trajectory(points_new)
+        return traj_new.resample(len(traj_new) - 1)
+
     def append(self, point: np.ndarray) -> None:
         self._points.append(point)
