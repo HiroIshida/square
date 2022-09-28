@@ -4,6 +4,10 @@ from typing import List, Tuple, overload
 import numpy as np
 
 
+class InvalidSamplePointError(Exception):
+    pass
+
+
 @dataclass
 class Trajectory:
     _points: List[np.ndarray]
@@ -20,7 +24,9 @@ class Trajectory:
 
     def sample_point(self, dist_from_start: float) -> np.ndarray:
 
-        assert dist_from_start <= self.length + 1e-6
+        if dist_from_start > self.length + 1e-6:
+            raise InvalidSamplePointError()
+
         dist_from_start = min(dist_from_start, self.length)
         edge_dist_sum = 0.0
         for i in range(len(self)):
