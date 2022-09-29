@@ -170,7 +170,7 @@ class OptimizationBasedPlanner:
         slsqp_option: Dict = {
             "ftol": self.config.ftol,
             "disp": self.config.disp,
-            "maxiter": self.config.maxiter,
+            "maxiter": self.config.maxiter - 1,  # somehome scipy iterate +1 more time
         }
 
         res = minimize(
@@ -183,4 +183,8 @@ class OptimizationBasedPlanner:
             options=slsqp_option,
         )
 
-        return PlanningResult.from_optimize_result(res)
+        plan_result = PlanningResult.from_optimize_result(res)
+        assert plan_result.nit <= self.config.maxiter, "{} must be <= {}".format(
+            plan_result.nit, self.config.maxiter
+        )
+        return plan_result
