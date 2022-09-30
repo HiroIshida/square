@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -119,14 +119,21 @@ class SquareWorld:
         sdf_mesh = self.get_sdf_mesh(n_grid)
         return GridSDF.from_mesh(sdf_mesh, self.b_min, self.b_max, method=method)
 
-    def visualize(self, n_grid: int = 100) -> Tuple:
+    def visualize(
+        self, n_grid: int = 100, with_contourf: bool = True, fax: Optional[Tuple] = None
+    ) -> Tuple:
         pts = self._get_mesh_points(n_grid)
         sdf_mesh = self.signed_distance(pts).reshape((n_grid, n_grid))
 
         xlin = np.linspace(self.b_min[0], self.b_max[0], n_grid)
         ylin = np.linspace(self.b_min[1], self.b_max[1], n_grid)
 
-        fig, ax = plt.subplots()
-        ax.contourf(xlin, ylin, sdf_mesh, cmap="summer")
+        if fax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig, ax = fax
+
+        if with_contourf:
+            ax.contourf(xlin, ylin, sdf_mesh, cmap="summer")
         ax.contour(xlin, ylin, sdf_mesh, cmap="gray", levels=[0.0])
         return fig, ax
