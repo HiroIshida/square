@@ -4,7 +4,7 @@ from typing import Callable, Dict, Optional, Tuple
 
 import numpy as np
 from scipy.linalg import block_diag
-from scipy.optimize import OptimizeResult, minimize
+from scipy.optimize import Bounds, OptimizeResult, minimize
 
 from square.protocols import SDFLike
 from square.trajectory import Trajectory
@@ -157,15 +157,15 @@ class OptimizationBasedPlanner:
         f, jac = self.scipinize(self.fun_objective)
 
         if self.b_min is not None and self.b_max is not None:
-            bounds = (
-                list(zip(self.b_min + self.config.clearance, self.b_max - self.config.clearance))
-                * self.config.n_waypoint
-            )
+            assert len(self.b_min) == len(self.b_max)
+            lb = np.tile(self.b_min + self.config.clearance, self.config.n_waypoint)
+            ub = np.tile(self.b_max - self.config.clearance, self.config.n_waypoint)
+            bounds = Bounds(lb, ub, keep_feasible=True)  # type: ignore
         else:
             bounds = None
 
-        x_init = init_trajectory.numpy().reshape((-1, 2))
-        assert x_init.shape[0] == self.config.n_waypoint
+        assert len(init_trajectory) == self.config.n_waypoint
+        x_init = init_trajectory.numpy().flatten()
 
         slsqp_option: Dict = {
             "ftol": self.config.ftol,
