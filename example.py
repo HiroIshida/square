@@ -27,6 +27,7 @@ if __name__ == "__main__":
 
     fax = world.visualize()
 
+    assert res.progress_cache is not None
     for traj in res.progress_cache:
         traj.visualize(fax, "k-", lw=0.3)
 

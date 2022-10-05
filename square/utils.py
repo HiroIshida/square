@@ -39,7 +39,7 @@ class Jsonable:
             elif isinstance(value, np.ndarray):
                 d[key] = base64.b64encode(pickle.dumps(value)).decode("utf-8")
             elif isinstance(value, (int, str, float, bool)):
-                d[key] = value
+                d[key] = value  # type: ignore
             elif get_origin(ttype) in [list, tuple]:
                 pass
             else:

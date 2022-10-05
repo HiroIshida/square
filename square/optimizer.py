@@ -44,7 +44,7 @@ class PlanningResult:
             elif key in res:
                 value = res[key]
             kwargs[key] = value
-        kwargs["progress_cache"] = progress_cache
+        kwargs["progress_cache"] = progress_cache  # type: ignore
         return cls(**kwargs)  # type: ignore
 
 
