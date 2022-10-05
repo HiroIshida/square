@@ -1,6 +1,6 @@
 import copy
 from dataclasses import dataclass, fields
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 from scipy.linalg import block_diag
@@ -29,18 +29,22 @@ class PlanningResult:
     fun: np.ndarray
     jac: np.ndarray
     nit: int
+    progress_cache: Optional[List[Trajectory]] = None
 
     @classmethod
-    def from_optimize_result(cls, res: OptimizeResult) -> "PlanningResult":
+    def from_optimize_result(
+        cls, res: OptimizeResult, progress_cache: Optional[List[Trajectory]] = None
+    ) -> "PlanningResult":
         kwargs = {}
         for field in fields(cls):
             key = field.name
             if key == "traj_solution":
                 points = res.x.reshape(-1, 2)
                 value = Trajectory(list(points))
-            else:
+            elif key in res:
                 value = res[key]
             kwargs[key] = value
+        kwargs["progress_cache"] = progress_cache
         return cls(**kwargs)  # type: ignore
 
 
@@ -148,13 +152,26 @@ class OptimizationBasedPlanner:
         grad = block_diag(*list(Grad0))
         return value, grad
 
-    def solve(self, init_trajectory: Trajectory) -> PlanningResult:
+    def solve(self, init_trajectory: Trajectory, cache_progress: bool = False) -> PlanningResult:
+
         eq_const_scipy, eq_const_jac_scipy = self.scipinize(self.fun_eq)
         eq_dict = {"type": "eq", "fun": eq_const_scipy, "jac": eq_const_jac_scipy}
 
         ineq_const_scipy, ineq_const_jac_scipy = self.scipinize(self.fun_ineq)
         ineq_dict = {"type": "ineq", "fun": ineq_const_scipy, "jac": ineq_const_jac_scipy}
-        f, jac = self.scipinize(self.fun_objective)
+
+        if cache_progress:
+            progress_cache = []
+
+            def wrap(x: np.ndarray):
+                traj = Trajectory(list(x.reshape(-1, 2)))
+                progress_cache.append(traj)
+                return self.fun_objective(x)
+
+            f, jac = self.scipinize(wrap)
+        else:
+            progress_cache = None
+            f, jac = self.scipinize(self.fun_objective)
 
         if self.b_min is not None and self.b_max is not None:
             assert len(self.b_min) == len(self.b_max)
@@ -183,7 +200,7 @@ class OptimizationBasedPlanner:
             options=slsqp_option,
         )
 
-        plan_result = PlanningResult.from_optimize_result(res)
+        plan_result = PlanningResult.from_optimize_result(res, progress_cache)
         assert plan_result.nit <= self.config.maxiter, "{} must be <= {}".format(
             plan_result.nit, self.config.maxiter
         )

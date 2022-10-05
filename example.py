@@ -22,10 +22,15 @@ if __name__ == "__main__":
 
     # solve optimization to plan a trajectory
     planner = OptimizationBasedPlanner(start, goal, world, world.b_min, world.b_max)
-    res = planner.solve(traj_init)
+    res = planner.solve(traj_init, cache_progress=True)
     assert res.success
 
     fax = world.visualize()
+
+    for traj in res.progress_cache:
+        traj.visualize(fax, "k-", lw=0.3)
+
     traj_init.visualize(fax, "bo-")
     res.traj_solution.visualize(fax, "ro-")
+
     plt.show()
