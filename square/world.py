@@ -135,5 +135,7 @@ class SquareWorld:
 
         if with_contourf:
             ax.contourf(xlin, ylin, sdf_mesh, cmap="summer")
+        else:
+            ax.contourf(xlin, ylin, sdf_mesh, cmap="bone", levels=[-0.5, 0])
         ax.contour(xlin, ylin, sdf_mesh, cmap="gray", levels=[0.0])
         return fig, ax
